@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
@@ -6,51 +7,58 @@
  *
  */
 
-import type {JSX, Ref, RefObject} from 'react';
+import type { JSX, Ref, RefObject } from 'react'
 
-import './EquationEditor.css';
+import './EquationEditor.css'
 
-import {isHTMLElement} from 'lexical';
-import {ChangeEvent, forwardRef} from 'react';
+import { isHTMLElement } from 'lexical'
+import { ChangeEvent, forwardRef } from 'react'
+import { MathfieldElement } from 'mathlive'
 
-type BaseEquationEditorProps = {
-  equation: string;
-  inline: boolean;
-  setEquation: (equation: string) => void;
-};
-
-function EquationEditor(
-  {equation, setEquation, inline}: BaseEquationEditorProps,
-  forwardedRef: Ref<HTMLInputElement | HTMLTextAreaElement>,
-): JSX.Element {
-  const onChange = (event: ChangeEvent) => {
-    setEquation((event.target as HTMLInputElement).value);
-  };
-
-  return inline && isHTMLElement(forwardedRef) ? (
-    <span className="EquationEditor_inputBackground">
-      <span className="EquationEditor_dollarSign">$</span>
-      <input
-        className="EquationEditor_inlineEditor"
-        value={equation}
-        onChange={onChange}
-        autoFocus={true}
-        ref={forwardedRef as RefObject<HTMLInputElement>}
-      />
-      <span className="EquationEditor_dollarSign">$</span>
-    </span>
-  ) : (
-    <div className="EquationEditor_inputBackground">
-      <span className="EquationEditor_dollarSign">{'$$\n'}</span>
-      <textarea
-        className="EquationEditor_blockEditor"
-        value={equation}
-        onChange={onChange}
-        ref={forwardedRef as RefObject<HTMLTextAreaElement>}
-      />
-      <span className="EquationEditor_dollarSign">{'\n$$'}</span>
-    </div>
-  );
+declare global {
+    namespace JSX {
+        interface IntrinsicElements {
+            'math-field': React.DetailedHTMLProps<
+                React.HTMLAttributes<MathfieldElement>,
+                MathfieldElement
+            >
+        }
+    }
 }
 
-export default forwardRef(EquationEditor);
+type BaseEquationEditorProps = {
+    equation: string
+    inline: boolean
+    setEquation: (equation: string) => void
+}
+
+function EquationEditor(
+    { equation, setEquation, inline }: BaseEquationEditorProps,
+    forwardedRef: Ref<HTMLInputElement | MathfieldElement>,
+): JSX.Element {
+    const onChange = (event: ChangeEvent) => {
+        console.log('onChange', event.target?.value)
+        setEquation((event.target as MathfieldElement).value)
+    }
+
+    return inline && isHTMLElement(forwardedRef) ? (
+        <span className="EquationEditor_inputBackground">
+            <span className="EquationEditor_dollarSign">$</span>
+            <input
+                className="EquationEditor_inlineEditor"
+                value={equation}
+                onChange={onChange}
+                autoFocus={true}
+                ref={forwardedRef as RefObject<HTMLInputElement>}
+            />
+            <span className="EquationEditor_dollarSign">$</span>
+        </span>
+    ) : (
+        <span className="EquationEditor_inputBackground">
+
+            {/* <textarea className="EquationEditor_blockEditor" value={equation} onChange={onChange} /> */}
+        </span>
+    )
+}
+
+export default forwardRef(EquationEditor)

@@ -43,11 +43,23 @@ export default function KatexRenderer({
     // inner text from Katex. There didn't seem to be any other way of making this work,
     // without having a physical space.
     <>
+      <img
+        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+        width="0"
+        height="0"
+        alt=""
+      />
       <span
         role="button"
-        tabIndex={0}
+        tabIndex={-1}
         onDoubleClick={onDoubleClick}
         ref={katexElementRef}
+      />
+      <img
+        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+        width="0"
+        height="0"
+        alt=""
       />
     </>
   );

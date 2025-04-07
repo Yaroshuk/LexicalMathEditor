@@ -5,139 +5,161 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
+import '//unpkg.com/mathlive'
 
-import type {JSX} from 'react';
+import type { JSX } from 'react'
 
-import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
-import {useLexicalEditable} from '@lexical/react/useLexicalEditable';
-import {mergeRegister} from '@lexical/utils';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
+import { useLexicalEditable } from '@lexical/react/useLexicalEditable'
+import { useLexicalNodeSelection } from '@lexical/react/useLexicalNodeSelection'
+import { mergeRegister } from '@lexical/utils'
 import {
-  $getNodeByKey,
-  $getSelection,
-  $isNodeSelection,
-  COMMAND_PRIORITY_HIGH,
-  KEY_ESCAPE_COMMAND,
-  NodeKey,
-  SELECTION_CHANGE_COMMAND,
-} from 'lexical';
-import * as React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
-import {ErrorBoundary} from 'react-error-boundary';
+    $getNodeByKey,
+    $getSelection,
+    $isNodeSelection,
+    BaseSelection,
+    CLICK_COMMAND,
+    COMMAND_PRIORITY_HIGH,
+    COMMAND_PRIORITY_LOW,
+    KEY_ESCAPE_COMMAND,
+    NodeKey,
+    SELECTION_CHANGE_COMMAND,
+} from 'lexical'
+import * as React from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ErrorBoundary } from 'react-error-boundary'
 
-import EquationEditor from './ui/EquationEditor';
-import KatexRenderer from './ui/KatexRenderer';
-import {$isEquationNode} from './EquationNode';
+import EquationEditor from './ui/EquationEditor'
+import KatexRenderer from './ui/KatexRenderer'
+import { $isEquationNode } from './EquationNode'
+import './styles.css'
 
 type EquationComponentProps = {
-  equation: string;
-  inline: boolean;
-  nodeKey: NodeKey;
-};
+    equation: string
+    inline: boolean
+    nodeKey: NodeKey
+}
 
 export default function EquationComponent({
-  equation,
-  inline,
-  nodeKey,
+    equation,
+    inline,
+    nodeKey,
 }: EquationComponentProps): JSX.Element {
-  const [editor] = useLexicalComposerContext();
-  const isEditable = useLexicalEditable();
-  const [equationValue, setEquationValue] = useState(equation);
-  const [showEquationEditor, setShowEquationEditor] = useState<boolean>(false);
-  const inputRef = useRef(null);
+    const [editor] = useLexicalComposerContext()
+    const isEditable = useLexicalEditable()
+    const [equationValue, setEquationValue] = useState(equation)
+    const [showEquationEditor, setShowEquationEditor] = useState<boolean>(false)
+    const [selection, setSelection] = useState<BaseSelection | null>(null)
+    const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey)
+    const ref = useRef(null)
 
-  const onHide = useCallback(
-    (restoreSelection?: boolean) => {
-      setShowEquationEditor(false);
-      editor.update(() => {
-        const node = $getNodeByKey(nodeKey);
-        if ($isEquationNode(node)) {
-          node.setEquation(equationValue);
-          if (restoreSelection) {
-            node.selectNext(0, 0);
-          }
+    // const onHide = useCallback(
+    //     (restoreSelection?: boolean) => {
+    //         setShowEquationEditor(false)
+    //         editor.update(() => {
+    //             const node = $getNodeByKey(nodeKey)
+    //             if ($isEquationNode(node)) {
+    //                 node.setEquation(equationValue)
+    //                 if (restoreSelection) {
+    //                     node.selectNext(0, 0)
+    //                 }
+    //             }
+    //         })
+    //     },
+    //     [editor, equationValue, nodeKey],
+    // )
+
+    useEffect(() => {
+        if (equationValue !== equation) {
+            setEquationValue(equation)
         }
-      });
-    },
-    [editor, equationValue, nodeKey],
-  );
+    }, [equation, equationValue])
 
-  useEffect(() => {
-    if (!showEquationEditor && equationValue !== equation) {
-      setEquationValue(equation);
-    }
-  }, [showEquationEditor, equation, equationValue]);
+    useEffect(() => {
+        // if (false) {
+        //     return mergeRegister(
+        //         editor.registerCommand(
+        //             SELECTION_CHANGE_COMMAND,
+        //             payload => {
+        //                 const activeElement = document.activeElement
+        //                 const inputElem = inputRef.current
+        //                 if (inputElem !== activeElement) {
+        //                     onHide()
+        //                 }
+        //                 return false
+        //             },
+        //             COMMAND_PRIORITY_HIGH,
+        //         ),
+        //         editor.registerCommand(
+        //             KEY_ESCAPE_COMMAND,
+        //             payload => {
+        //                 console.log(payload)
+        //                 const activeElement = document.activeElement
+        //                 const inputElem = inputRef.current
+        //                 if (inputElem === activeElement) {
+        //                     onHide(true)
+        //                     return true
+        //                 }
+        //                 return false
+        //             },
+        //             COMMAND_PRIORITY_HIGH,
+        //         ),
+        //     )
+        // } else {
+        return mergeRegister(
+            editor.registerUpdateListener(({ editorState }) => {
+                setSelection(editorState.read(() => $getSelection()))
+            }),
+            editor.registerCommand<MouseEvent>(
+                CLICK_COMMAND,
+                payload => {
+                    const event = payload
+                    console.log(event.target)
 
-  useEffect(() => {
-    if (!isEditable) {
-      return;
-    }
-    if (showEquationEditor) {
-      return mergeRegister(
-        editor.registerCommand(
-          SELECTION_CHANGE_COMMAND,
-          (payload) => {
-            const activeElement = document.activeElement;
-            const inputElem = inputRef.current;
-            if (inputElem !== activeElement) {
-              onHide();
+                    if (event.target === ref.current) {
+                        // editor.blur()
+                        // event.target?.focus()
+
+                        if (!event.shiftKey) {
+                            clearSelection()
+                        }
+                        setSelected(!isSelected)
+                        return true
+                    }
+
+                    return false
+                },
+                COMMAND_PRIORITY_LOW,
+            ),
+        )
+    }, [editor, nodeKey, showEquationEditor])
+
+    const isFocused = $isNodeSelection(selection) && isSelected
+
+    const changeHandler = (evt: React.ChangeEvent<HTMLElement>) => {
+        editor.update(() => {
+            const node = $getNodeByKey(nodeKey)
+
+            if ($isEquationNode(node)) {
+                console.log('node', node)
+                node.setEquation((evt.target as MathfieldElement).value)
             }
-            return false;
-          },
-          COMMAND_PRIORITY_HIGH,
-        ),
-        editor.registerCommand(
-          KEY_ESCAPE_COMMAND,
-          (payload) => {
-            const activeElement = document.activeElement;
-            const inputElem = inputRef.current;
-            if (inputElem === activeElement) {
-              onHide(true);
-              return true;
-            }
-            return false;
-          },
-          COMMAND_PRIORITY_HIGH,
-        ),
-      );
-    } else {
-      return editor.registerUpdateListener(({editorState}) => {
-        const isSelected = editorState.read(() => {
-          const selection = $getSelection();
-          return (
-            $isNodeSelection(selection) &&
-            selection.has(nodeKey) &&
-            selection.getNodes().length === 1
-          );
-        });
-        if (isSelected) {
-          setShowEquationEditor(true);
-        }
-      });
+        })
     }
-  }, [editor, nodeKey, onHide, showEquationEditor, isEditable]);
 
-  return (
-    <>
-      {showEquationEditor && isEditable ? (
-        <EquationEditor
-          equation={equationValue}
-          setEquation={setEquationValue}
-          inline={inline}
-          ref={inputRef}
-        />
-      ) : (
-        <ErrorBoundary onError={(e) => editor._onError(e)} fallback={null}>
-          <KatexRenderer
-            equation={equationValue}
-            inline={inline}
-            onDoubleClick={() => {
-              if (isEditable) {
-                setShowEquationEditor(true);
-              }
-            }}
-          />
-        </ErrorBoundary>
-      )}
-    </>
-  );
+    console.log('VALUE', equationValue)
+
+    return (
+        <>
+            <ErrorBoundary onError={e => editor._onError(e)} fallback={null}>
+                <math-field
+                    className={`EquationEditor_blockEditor  ${isFocused ? 'focused' : ''}`}
+                    onInput={changeHandler}
+                    ref={ref}
+                >
+                    {equationValue}
+                </math-field>
+            </ErrorBoundary>
+        </>
+    )
 }

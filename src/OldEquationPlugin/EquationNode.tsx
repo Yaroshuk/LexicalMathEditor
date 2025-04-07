@@ -38,7 +38,6 @@ function $convertEquationElement(
   const inline = domNode.getAttribute('data-lexical-inline') === 'true';
   // Decode the equation from base64
   equation = atob(equation || '');
-  console.log(equation);
   if (equation) {
     const node = $createEquationNode(equation, inline);
     return {node};
@@ -83,7 +82,6 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
   createDOM(_config: EditorConfig): HTMLElement {
     const element = document.createElement(this.__inline ? 'span' : 'div');
     // EquationNodes should implement `user-action:none` in their CSS to avoid issues with deletion on Android.
-    element.style.display = "inline-block";
     element.className = 'editor-equation';
     return element;
   }
@@ -94,14 +92,14 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
     const equation = btoa(this.__equation);
     element.setAttribute('data-lexical-equation', equation);
     element.setAttribute('data-lexical-inline', `${this.__inline}`);
-    // katex.render(this.__equation, element, {
-    //   displayMode: !this.__inline, // true === block display //
-    //   errorColor: '#cc0000',
-    //   output: 'html',
-    //   strict: 'warn',
-    //   throwOnError: false,
-    //   trust: false,
-    // });
+    katex.render(this.__equation, element, {
+      displayMode: !this.__inline, // true === block display //
+      errorColor: '#cc0000',
+      output: 'html',
+      strict: 'warn',
+      throwOnError: false,
+      trust: false,
+    });
     return {element};
   }
 
@@ -129,7 +127,6 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
   }
 
   updateDOM(prevNode: this): boolean {
-    return false;
     // If the inline property changes, replace the element
     return this.__inline !== prevNode.__inline;
   }
@@ -143,7 +140,6 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
   }
 
   setEquation(equation: string): void {
-    console.log('rr', equation)
     const writable = this.getWritable();
     writable.__equation = equation;
   }
