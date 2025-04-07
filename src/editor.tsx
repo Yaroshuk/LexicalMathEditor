@@ -10,6 +10,8 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { EditorState } from 'lexical';
+import EmojisPlugin from './EmojiPlugin/EmojuPlugin';
+import { EmojiNode } from './EmojiPlugin/EmojiNode';
 
 function Editor() {
   // Начальная конфигурация редактора
@@ -24,6 +26,7 @@ function Editor() {
       },
       paragraph: 'lexical-paragraph'
     },
+    nodes: [EmojiNode],
     onError: (error) => {
       console.error('Lexical Editor Error:', error);
     }
@@ -49,6 +52,7 @@ function Editor() {
         />
         {/* Плагин истории (отмена/повтор) */}
         <HistoryPlugin />
+        <EmojisPlugin />
         {/* Плагин для отслеживания изменений */}
         <OnChangePlugin onChange={onChange} />
       </div>

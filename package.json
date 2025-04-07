@@ -51,6 +51,7 @@
     "dependencies": {
         "@lexical/react": "^0.29.0",
         "clsx": "1.2.1",
+        "emoji-datasource-facebook": "^15.1.2",
         "lexical": "^0.29.0",
         "prosemirror-example-setup": "^1.2.3",
         "prosemirror-model": "^1.25.0",
