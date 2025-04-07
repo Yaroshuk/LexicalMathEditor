@@ -12,6 +12,9 @@ import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { EditorState } from 'lexical';
 import EmojisPlugin from './EmojiPlugin/EmojuPlugin';
 import { EmojiNode } from './EmojiPlugin/EmojiNode';
+import EquationsPlugin from './EquationPlugin/EquationsPlugin';
+import { EquationNode } from './EquationPlugin/EquationNode';
+import MarkdownShortcutPlugin from './MarkdownShortcutPlugin'
 
 function Editor() {
   // Начальная конфигурация редактора
@@ -26,7 +29,7 @@ function Editor() {
       },
       paragraph: 'lexical-paragraph'
     },
-    nodes: [EmojiNode],
+    nodes: [EmojiNode, EquationNode],
     onError: (error) => {
       console.error('Lexical Editor Error:', error);
     }
@@ -51,8 +54,10 @@ function Editor() {
           ErrorBoundary={LexicalErrorBoundary}
         />
         {/* Плагин истории (отмена/повтор) */}
+        <EquationsPlugin />
         <HistoryPlugin />
         <EmojisPlugin />
+        <MarkdownShortcutPlugin />
         {/* Плагин для отслеживания изменений */}
         <OnChangePlugin onChange={onChange} />
       </div>
