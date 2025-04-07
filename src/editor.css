@@ -1,0 +1,53 @@
+/* src/styles/editor.css */
+
+.lexical-editor-container {
+  position: relative;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.lexical-editor-input {
+  min-height: 150px;
+  padding: 15px;
+  outline: none;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.lexical-editor {
+  background-color: #fff;
+  width: 100%;
+  min-height: 200px;
+  border: 1px solid red;
+}
+
+.lexical-editor:focus {
+  outline: none;
+}
+
+.lexical-paragraph {
+  margin: 0 0 15px 0;
+}
+
+.lexical-text-bold {
+  font-weight: bold;
+}
+
+.lexical-text-italic {
+  font-style: italic;
+}
+
+.lexical-text-underline {
+  text-decoration: underline;
+}
+
+.lexical-editor-placeholder {
+  color: #999;
+  overflow: hidden;
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  user-select: none;
+  pointer-events: none;
+}
