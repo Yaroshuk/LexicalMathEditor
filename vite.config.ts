@@ -25,9 +25,9 @@ export default defineConfig({
     build: {
         lib: {
             entry: resolve(__dirname, 'src/index.tsx'),
-            name: '@magmamath/features',
+            name: 'lexical-math',
             formats: ['es'],
-            fileName: format => `magmamath-features.${format}.js`,
+            fileName: format => `lexical-math.${format}.js`,
         },
         rollupOptions: {
             external: [...Object.keys(packageJson.peerDependencies), 'react/jsx-runtime'],

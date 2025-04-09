@@ -1,4 +1,3 @@
-import React from 'react';
 import Editor from './editor';
 import './editor.css'; // Импортируем стили
 

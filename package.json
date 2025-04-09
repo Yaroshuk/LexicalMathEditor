@@ -37,9 +37,6 @@
             "yarn stylelint:fix"
         ]
     },
-    "simple-git-hooks": {
-        "pre-commit": "yarn lint-staged"
-    },
     "publishConfig": {
         "access": "restricted"
     },

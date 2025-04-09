@@ -5,3 +5,9 @@ declare global {
     }
   }
 }
+
+declare module 'loggly-jslogger'
+declare module '*.scss' {
+  const content: { [className: string]: string }
+  export = content
+}

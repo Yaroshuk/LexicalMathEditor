@@ -37,7 +37,9 @@ function EquationEditor(
     forwardedRef: Ref<HTMLInputElement | MathfieldElement>,
 ): JSX.Element {
     const onChange = (event: ChangeEvent) => {
-        console.log('onChange', event.target?.value)
+        const target = event.target as MathfieldElement
+
+        console.log('onChange', target?.value ?? '')
         setEquation((event.target as MathfieldElement).value)
     }
 

@@ -30,7 +30,7 @@ function Editor() {
       paragraph: 'lexical-paragraph'
     },
     nodes: [EmojiNode, EquationNode],
-    onError: (error) => {
+    onError: (error: unknown) => {
       console.error('Lexical Editor Error:', error);
     }
   };

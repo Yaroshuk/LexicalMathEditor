@@ -5,12 +5,24 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
+declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
+    namespace JSX {
+        interface IntrinsicElements {
+            'math-field': React.DetailedHTMLProps<
+                React.HTMLAttributes<MathfieldElement>,
+                MathfieldElement
+            >
+        }
+    }
+}
+
 import '//unpkg.com/mathlive'
 
 import type { JSX } from 'react'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-import { useLexicalEditable } from '@lexical/react/useLexicalEditable'
+//import { useLexicalEditable } from '@lexical/react/useLexicalEditable'
 import { useLexicalNodeSelection } from '@lexical/react/useLexicalNodeSelection'
 import { mergeRegister } from '@lexical/utils'
 import {
@@ -19,20 +31,16 @@ import {
     $isNodeSelection,
     BaseSelection,
     CLICK_COMMAND,
-    COMMAND_PRIORITY_HIGH,
     COMMAND_PRIORITY_LOW,
-    KEY_ESCAPE_COMMAND,
     NodeKey,
-    SELECTION_CHANGE_COMMAND,
 } from 'lexical'
-import * as React from 'react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 
-import EquationEditor from './ui/EquationEditor'
-import KatexRenderer from './ui/KatexRenderer'
 import { $isEquationNode } from './EquationNode'
-import './styles.css'
+import styles from './Equations.module.scss'
+import { MathfieldElement } from 'mathlive'
+import clsx from 'clsx'
 
 type EquationComponentProps = {
     equation: string
@@ -42,13 +50,12 @@ type EquationComponentProps = {
 
 export default function EquationComponent({
     equation,
-    inline,
     nodeKey,
 }: EquationComponentProps): JSX.Element {
     const [editor] = useLexicalComposerContext()
-    const isEditable = useLexicalEditable()
+    //const isEditable = useLexicalEditable()
     const [equationValue, setEquationValue] = useState(equation)
-    const [showEquationEditor, setShowEquationEditor] = useState<boolean>(false)
+    const [showEquationEditor] = useState<boolean>(false)
     const [selection, setSelection] = useState<BaseSelection | null>(null)
     const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey)
     const ref = useRef(null)
@@ -136,13 +143,13 @@ export default function EquationComponent({
 
     const isFocused = $isNodeSelection(selection) && isSelected
 
-    const changeHandler = (evt: React.ChangeEvent<HTMLElement>) => {
+    const changeHandler = (value: string) => {
         editor.update(() => {
             const node = $getNodeByKey(nodeKey)
 
             if ($isEquationNode(node)) {
                 console.log('node', node)
-                node.setEquation((evt.target as MathfieldElement).value)
+                node.setEquation(value)
             }
         })
     }
@@ -151,15 +158,15 @@ export default function EquationComponent({
 
     return (
         <>
-            <ErrorBoundary onError={e => editor._onError(e)} fallback={null}>
+            <span className={clsx(styles.MathField, isFocused && styles.Focused)}>
                 <math-field
-                    className={`EquationEditor_blockEditor  ${isFocused ? 'focused' : ''}`}
-                    onInput={changeHandler}
+                    onInput={evt => changeHandler((evt.target as MathfieldElement).value)}
                     ref={ref}
                 >
+                    <div className={styles.MathField}>dfdf</div>
                     {equationValue}
                 </math-field>
-            </ErrorBoundary>
+            </span>
         </>
     )
 }
