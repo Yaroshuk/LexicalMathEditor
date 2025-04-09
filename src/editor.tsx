@@ -56,7 +56,7 @@ function Editor() {
         {/* Плагин истории (отмена/повтор) */}
         <EquationsPlugin />
         <HistoryPlugin />
-        <EmojisPlugin />
+        {/* <EmojisPlugin /> */}
         <MarkdownShortcutPlugin />
         {/* Плагин для отслеживания изменений */}
         <OnChangePlugin onChange={onChange} />
