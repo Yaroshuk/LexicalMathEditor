@@ -11,7 +11,7 @@ export default defineConfig({
         global: 'window',
     },
     server: {
-        port: 3001,
+        port: 3200,
     },
     plugins: [
         react(),

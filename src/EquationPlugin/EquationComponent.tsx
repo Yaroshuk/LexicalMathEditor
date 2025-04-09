@@ -59,6 +59,7 @@ export default function EquationComponent({
     const [selection, setSelection] = useState<BaseSelection | null>(null)
     const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey)
     const ref = useRef(null)
+    const [MathField, setMathField] = useState<MathfieldElement | null>(null)
 
     // const onHide = useCallback(
     //     (restoreSelection?: boolean) => {
@@ -154,19 +155,42 @@ export default function EquationComponent({
         })
     }
 
+    // useEffect(() => {
+    //     const field = new MathfieldElement()
+    //     field.value = equationValue
+    //     field.oninput = (event: Event) => {
+    //         const target = event.target as MathfieldElement
+    //         changeHandler(target.value)
+    //     }
+
+    //     //setMathField(field)
+    // }, [equationValue, changeHandler])
+
     console.log('VALUE', equationValue)
 
     return (
         <>
-            <span className={clsx(styles.MathField, isFocused && styles.Focused)}>
+            <div className={clsx(styles.MathField, isFocused && styles.Focused)}>
+                <img
+                    src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                    width="0"
+                    height="0"
+                    alt=""
+                />
                 <math-field
                     onInput={evt => changeHandler((evt.target as MathfieldElement).value)}
                     ref={ref}
+                    tabIndex={-1}
                 >
-                    <div className={styles.MathField}>dfdf</div>
                     {equationValue}
                 </math-field>
-            </span>
+                <img
+                    src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                    width="0"
+                    height="0"
+                    alt=""
+                />
+            </div>
         </>
     )
 }

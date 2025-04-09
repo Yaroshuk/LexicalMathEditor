@@ -1,6 +1,10 @@
 .MathField {
-    display: inline-block;
     border-radius: 3px;
+    min-width: 20px;
+    min-height: 20px;
+    background: gray;
+    //user-select: none;
+    padding: 1px;
 }
 
 .Focused {
