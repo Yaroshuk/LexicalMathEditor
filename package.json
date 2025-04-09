@@ -49,6 +49,7 @@
     },
     "license": "MIT",
     "dependencies": {
+        "mathlive": "^0.98.6",
         "@lexical/react": "^0.29.0",
         "clsx": "1.2.1",
         "emoji-datasource-facebook": "^15.1.2",
@@ -57,11 +58,11 @@
         "prosemirror-model": "^1.25.0",
         "prosemirror-schema-basic": "^1.2.4",
         "prosemirror-state": "^1.4.3",
-        "prosemirror-view": "^1.39.1"
+        "prosemirror-view": "^1.39.1",
+        "katex": "^0.13.2"
     },
     "devDependencies": {
-        "@magmamath/ui": "0.20.15",
-        "@matteappen/skills-utils": "3.1.13",
+        "@types/katex": "^0.11.0",
         "@types/react": "^18.0.37",
         "@types/react-dom": "^18.0.11",
         "@types/react-katex": "^3.0.4",
@@ -93,8 +94,6 @@
         "vite-tsconfig-paths": "^4.2.0"
     },
     "peerDependencies": {
-        "@magmamath/ui": "0.20.15",
-        "@matteappen/skills-utils": "3.1.11",
         "effector": "^23.2.2",
         "effector-react": "^23.2.1",
         "react": ">=17.0.0",
