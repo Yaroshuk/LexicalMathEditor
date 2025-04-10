@@ -7,166 +7,158 @@
  */
 
 import type {
-  DOMConversionMap,
-  DOMConversionOutput,
-  EditorConfig,
-  LexicalNode,
-  NodeKey,
-  SerializedLexicalNode,
-  Spread,
-} from 'lexical';
-import type {JSX} from 'react';
+    DOMConversionMap,
+    DOMConversionOutput,
+    EditorConfig,
+    LexicalNode,
+    NodeKey,
+    SerializedLexicalNode,
+    Spread,
+} from 'lexical'
+import type { JSX } from 'react'
 
-import {$applyNodeReplacement, DecoratorNode, DOMExportOutput} from 'lexical';
-import * as React from 'react';
+import { DecoratorNode, DOMExportOutput } from 'lexical'
+import * as React from 'react'
 
-const EquationComponent = React.lazy(() => import('./EquationComponent'));
+const EquationComponent = React.lazy(() => import('./EquationComponent'))
 
 export type SerializedEquationNode = Spread<
-  {
-    equation: string;
-    inline: boolean;
-  },
-  SerializedLexicalNode
->;
+    {
+        equation: string
+        initialFocus: boolean
+    },
+    SerializedLexicalNode
+>
 
-function $convertEquationElement(
-  domNode: HTMLElement,
-): null | DOMConversionOutput {
-  let equation = domNode.getAttribute('data-lexical-equation');
-  const inline = domNode.getAttribute('data-lexical-inline') === 'true';
-  // Decode the equation from base64
-  equation = atob(equation || '');
-  console.log(equation);
-  if (equation) {
-    const node = $createEquationNode(equation, inline);
-    return {node};
-  }
+function $convertEquationElement(domNode: HTMLElement): null | DOMConversionOutput {
+    let equation = domNode.getAttribute('data-lexical-equation')
+    const inline = domNode.getAttribute('data-lexical-inline') === 'true'
+    // Decode the equation from base64
+    equation = atob(equation || '')
+    console.log(equation)
+    if (equation) {
+        const node = $createEquationNode(equation, inline)
+        return { node }
+    }
 
-  return null;
+    return null
 }
 
 export class EquationNode extends DecoratorNode<JSX.Element> {
-  __equation: string;
-  __inline: boolean;
+    __equation: string
+    __initialFocus: boolean
 
-  static getType(): string {
-    return 'equation';
-  }
+    static getType(): string {
+        return 'equation'
+    }
 
-  static clone(node: EquationNode): EquationNode {
-    return new EquationNode(node.__equation, node.__inline, node.__key);
-  }
+    static clone(node: EquationNode): EquationNode {
+        return new EquationNode(node.__equation, node.__initialFocus, node.__key)
+    }
 
-  constructor(equation: string, inline?: boolean, key?: NodeKey) {
-    super(key);
-    this.__equation = equation;
-    this.__inline = inline ?? false;
-  }
+    constructor(equation: string, initialFocus?: boolean, key?: NodeKey) {
+        super(key)
+        this.__equation = equation
+        this.__initialFocus = initialFocus ?? false
+    }
 
-  static importJSON(serializedNode: SerializedEquationNode): EquationNode {
-    return $createEquationNode(
-      serializedNode.equation,
-      serializedNode.inline,
-    ).updateFromJSON(serializedNode);
-  }
+    static importJSON(serializedNode: SerializedEquationNode): EquationNode {
+        return $createEquationNode(serializedNode.equation, serializedNode.initialFocus).updateFromJSON(
+            serializedNode,
+        )
+    }
 
-  exportJSON(): SerializedEquationNode {
-    return {
-      ...super.exportJSON(),
-      equation: this.getEquation(),
-      inline: this.__inline,
-    };
-  }
-
-  createDOM(_config: EditorConfig): HTMLElement {
-    const element = document.createElement(this.__inline ? 'span' : 'div');
-    // EquationNodes should implement `user-action:none` in their CSS to avoid issues with deletion on Android.
-    element.style.display = "inline-block";
-    element.className = 'editor-equation';
-    return element;
-  }
-
-  exportDOM(): DOMExportOutput {
-    const element = document.createElement(this.__inline ? 'span' : 'div');
-    // Encode the equation as base64 to avoid issues with special characters
-    const equation = btoa(this.__equation);
-    element.setAttribute('data-lexical-equation', equation);
-    element.setAttribute('data-lexical-inline', `${this.__inline}`);
-    // katex.render(this.__equation, element, {
-    //   displayMode: !this.__inline, // true === block display //
-    //   errorColor: '#cc0000',
-    //   output: 'html',
-    //   strict: 'warn',
-    //   throwOnError: false,
-    //   trust: false,
-    // });
-    return {element};
-  }
-
-  static importDOM(): DOMConversionMap | null {
-    return {
-      div: (domNode: HTMLElement) => {
-        if (!domNode.hasAttribute('data-lexical-equation')) {
-          return null;
-        }
+    exportJSON(): SerializedEquationNode {
         return {
-          conversion: $convertEquationElement,
-          priority: 2,
-        };
-      },
-      span: (domNode: HTMLElement) => {
-        if (!domNode.hasAttribute('data-lexical-equation')) {
-          return null;
+            ...super.exportJSON(),
+            equation: this.getEquation(),
+            initialFocus: this.__initialFocus,
         }
+    }
+
+    createDOM(_config: EditorConfig): HTMLElement {
+        const element = document.createElement(this.__inline ? 'span' : 'div')
+        // EquationNodes should implement `user-action:none` in their CSS to avoid issues with deletion on Android.
+        element.style.display = 'inline-block'
+        element.className = 'editor-equation'
+        return element
+    }
+
+    exportDOM(): DOMExportOutput {
+        const element = document.createElement(this.__inline ? 'span' : 'div')
+        // Encode the equation as base64 to avoid issues with special characters
+        const equation = btoa(this.__equation)
+        element.setAttribute('data-lexical-equation', equation)
+        element.setAttribute('data-lexical-inline', `${this.__inline}`)
+        // katex.render(this.__equation, element, {
+        //   displayMode: !this.__inline, // true === block display //
+        //   errorColor: '#cc0000',
+        //   output: 'html',
+        //   strict: 'warn',
+        //   throwOnError: false,
+        //   trust: false,
+        // });
+        return { element }
+    }
+
+    static importDOM(): DOMConversionMap | null {
         return {
-          conversion: $convertEquationElement,
-          priority: 1,
-        };
-      },
-    };
-  }
+            div: (domNode: HTMLElement) => {
+                if (!domNode.hasAttribute('data-lexical-equation')) {
+                    return null
+                }
+                return {
+                    conversion: $convertEquationElement,
+                    priority: 2,
+                }
+            },
+            span: (domNode: HTMLElement) => {
+                if (!domNode.hasAttribute('data-lexical-equation')) {
+                    return null
+                }
+                return {
+                    conversion: $convertEquationElement,
+                    priority: 1,
+                }
+            },
+        }
+    }
 
-  updateDOM(prevNode: this): boolean {
-    return false;
-    // If the inline property changes, replace the element
-    return this.__inline !== prevNode.__inline;
-  }
+    updateDOM(prevNode: this): boolean {
+        return false
+        // If the inline property changes, replace the element
+        return this.__inline !== prevNode.__inline
+    }
 
-  getTextContent(): string {
-    return this.__equation;
-  }
+    getTextContent(): string {
+        return this.__equation
+    }
 
-  getEquation(): string {
-    return this.__equation;
-  }
+    getEquation(): string {
+        return this.__equation
+    }
 
-  setEquation(equation: string): void {
-    console.log('rr', equation)
-    const writable = this.getWritable();
-    writable.__equation = equation;
-  }
+    setEquation(equation: string): void {
+        console.log('rr', equation)
+        const writable = this.getWritable()
+        writable.__equation = equation
+    }
 
-  decorate(): JSX.Element {
-    return (
-      <EquationComponent
-        equation={this.__equation}
-        inline={this.__inline}
-        nodeKey={this.__key}
-      />
-    );
-  }
+    decorate(): JSX.Element {
+        return (
+            <EquationComponent
+                equation={this.__equation}
+                inline={this.__inline}
+                nodeKey={this.__key}
+            />
+        )
+    }
 }
 
-export function $createEquationNode(
-  equation = '',
-  inline = false,
-): EquationNode {
-  return new EquationNode(equation, inline);
+export function $createEquationNode(equation = '', initialFocus = false): EquationNode {
+    return new EquationNode(equation, initialFocus)
 }
 
-export function $isEquationNode(
-  node: LexicalNode | null | undefined,
-): node is EquationNode {
-  return node instanceof EquationNode;
+export function $isEquationNode(node: LexicalNode | null | undefined): node is EquationNode {
+    return node instanceof EquationNode
 }

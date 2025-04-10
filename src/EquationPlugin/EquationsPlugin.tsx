@@ -17,11 +17,14 @@ import {
     $insertNodes,
     $isRootOrShadowRoot,
     COMMAND_PRIORITY_EDITOR,
+    COMMAND_PRIORITY_LOW,
     createCommand,
+    KEY_DOWN_COMMAND,
     LexicalCommand,
+    PASTE_COMMAND,
     TextNode,
 } from 'lexical'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { $createEquationNode, EquationNode } from './EquationNode'
 import { findFormulaInput } from './helpers/findFormulaInput'
 import { mergeRegister } from '@lexical/utils'
@@ -31,11 +34,15 @@ type CommandPayload = {
     inline: boolean
 }
 
+enum InputType {
+    PASTE = 'paste',
+    KEYBOARD = 'keyboard',
+}
+
 export const INSERT_EQUATION_COMMAND: LexicalCommand<CommandPayload> =
     createCommand('INSERT_EQUATION_COMMAND')
 
-
-function $findAndTransformInputFormula(node: TextNode): null | TextNode {
+function $findAndTransformInputFormula(node: TextNode, inputType: InputType): null | TextNode {
     const text = node.getTextContent()
 
     const fourmulaInput = findFormulaInput(text)
@@ -43,6 +50,8 @@ function $findAndTransformInputFormula(node: TextNode): null | TextNode {
     if (!fourmulaInput) {
         return null
     }
+
+    console.log('inputType', inputType, fourmulaInput)
 
     const { fullMatch, index, length } = fourmulaInput
 
@@ -61,32 +70,10 @@ function $findAndTransformInputFormula(node: TextNode): null | TextNode {
     return node === targetNode ? null : node
 }
 
-function $textNodeTransform(node: TextNode): void {
-    let targetNode: TextNode | null = node
-
-    while (targetNode !== null) {
-        if (!targetNode.isSimpleText()) {
-            return
-        }
-
-        targetNode = $findAndTransformInputFormula(targetNode)
-    }
-}
-
-const formulaBoundary = '(?:^|$|[^$])'
-
-const formulaChar = '\\$'
-
-const formulaContent = '([^$]+?)'
-
-function getFormulaImportRegexString(): string {
-    return `(${formulaBoundary})(${formulaChar})(${formulaContent})(${formulaChar})(${formulaBoundary})`
-}
-
-const IMPORT_REGEX = new RegExp(getFormulaImportRegexString(), 'i')
-
 export default function EquationsPlugin(): JSX.Element | null {
     const [editor] = useLexicalComposerContext()
+
+    const inputTypeRef = useRef<InputType>(InputType.KEYBOARD)
 
     useEffect(() => {
         if (!editor.hasNodes([EquationNode])) {
@@ -111,8 +98,35 @@ export default function EquationsPlugin(): JSX.Element | null {
                 },
                 COMMAND_PRIORITY_EDITOR,
             ),
-            editor.registerNodeTransform(TextNode, $textNodeTransform),
+            editor.registerCommand(
+                PASTE_COMMAND,
+                () => {
+                    inputTypeRef.current = InputType.PASTE
+                    return false
+                },
+                COMMAND_PRIORITY_LOW,
+            ),
+            editor.registerCommand(
+                KEY_DOWN_COMMAND,
+                () => {
+                    inputTypeRef.current = InputType.KEYBOARD
+                    return false
+                },
+                COMMAND_PRIORITY_LOW,
+            ),
+            editor.registerNodeTransform(TextNode, (node: TextNode) => {
+                let targetNode: TextNode | null = node
+
+                while (targetNode !== null) {
+                    if (!targetNode.isSimpleText()) {
+                        return
+                    }
+
+                    targetNode = $findAndTransformInputFormula(targetNode, inputTypeRef.current)
+                }
+            }),
         )
     }, [editor])
+
     return null
 }
