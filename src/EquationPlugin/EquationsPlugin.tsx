@@ -19,14 +19,12 @@ import {
     COMMAND_PRIORITY_EDITOR,
     createCommand,
     LexicalCommand,
-    LexicalEditor,
     TextNode,
 } from 'lexical'
-import { useCallback, useEffect } from 'react'
+import { useEffect } from 'react'
 import { $createEquationNode, EquationNode } from './EquationNode'
-import KatexEquationAlterer from './ui/KatexEquationAlterer'
-import { $createEmojiNode } from 'src/EmojiPlugin/EmojiNode'
-import { findFormulaInputs } from './helpers/findFormulaInputs'
+import { findFormulaInput } from './helpers/findFormulaInput'
+import { mergeRegister } from '@lexical/utils'
 
 type CommandPayload = {
     equation: string
@@ -36,63 +34,31 @@ type CommandPayload = {
 export const INSERT_EQUATION_COMMAND: LexicalCommand<CommandPayload> =
     createCommand('INSERT_EQUATION_COMMAND')
 
-export function InsertEquationDialog({
-    activeEditor,
-    onClose,
-}: {
-    activeEditor: LexicalEditor
-    onClose: () => void
-}): JSX.Element {
-    const onEquationConfirm = useCallback(
-        (equation: string, inline: boolean) => {
-            activeEditor.dispatchCommand(INSERT_EQUATION_COMMAND, { equation, inline })
-            onClose()
-        },
-        [activeEditor, onClose],
-    )
 
-    return <KatexEquationAlterer onConfirm={onEquationConfirm} />
-}
-
-const emojis: Map<string, [string, string]> = new Map([
-    [':)', ['emoji happysmile', '🙂']],
-    [':D', ['emoji veryhappysmile', '😀']],
-    [':(', ['emoji unhappysmile', '🙁']],
-    ['<3', ['emoji heart', '❤']],
-])
-
-function $findAndTransformEmoji(node: TextNode): null | TextNode {
+function $findAndTransformInputFormula(node: TextNode): null | TextNode {
     const text = node.getTextContent()
 
-    const fourmulaInputs = findFormulaInputs(text)
+    const fourmulaInput = findFormulaInput(text)
 
-    console.log('FORMULA', fourmulaInputs)
-
-    if (!fourmulaInputs.length) {
+    if (!fourmulaInput) {
         return null
     }
 
+    const { fullMatch, index, length } = fourmulaInput
 
-    for (let i = 0; i < text.length; i++) {
-        const emojiData = emojis.get(text[i]) || emojis.get(text.slice(i, i + 2))
+    let targetNode
 
-        if (emojiData !== undefined) {
-            const [emojiStyle, emojiText] = emojiData
-            let targetNode
-
-            if (i === 0) {
-                ;[targetNode] = node.splitText(i + 2)
-            } else {
-                ;[, targetNode] = node.splitText(i, i + 2)
-            }
-
-            const emojiNode = $createEmojiNode(emojiStyle, emojiText)
-            targetNode.replace(emojiNode)
-            return emojiNode
-        }
+    if (index === 0) {
+        ;[targetNode] = node.splitText(index + length)
+    } else {
+        ;[, targetNode] = node.splitText(index, index + length)
     }
 
-    return null
+    const formulaNode = $createEquationNode(`$${fullMatch}$`, true)
+
+    targetNode.replace(formulaNode)
+
+    return node === targetNode ? null : node
 }
 
 function $textNodeTransform(node: TextNode): void {
@@ -103,9 +69,21 @@ function $textNodeTransform(node: TextNode): void {
             return
         }
 
-        targetNode = $findAndTransformEmoji(targetNode)
+        targetNode = $findAndTransformInputFormula(targetNode)
     }
 }
+
+const formulaBoundary = '(?:^|$|[^$])'
+
+const formulaChar = '\\$'
+
+const formulaContent = '([^$]+?)'
+
+function getFormulaImportRegexString(): string {
+    return `(${formulaBoundary})(${formulaChar})(${formulaContent})(${formulaChar})(${formulaBoundary})`
+}
+
+const IMPORT_REGEX = new RegExp(getFormulaImportRegexString(), 'i')
 
 export default function EquationsPlugin(): JSX.Element | null {
     const [editor] = useLexicalComposerContext()
@@ -114,25 +92,27 @@ export default function EquationsPlugin(): JSX.Element | null {
         if (!editor.hasNodes([EquationNode])) {
             throw new Error('EquationsPlugins: EquationsNode not registered on editor')
         }
-
-        editor.registerCommand<CommandPayload>(
-            INSERT_EQUATION_COMMAND,
-            payload => {
-                const { equation, inline } = payload
-                const equationNode = $createEquationNode(equation, inline)
-
-                $insertNodes([equationNode])
-                if ($isRootOrShadowRoot(equationNode.getParentOrThrow())) {
-                    $wrapNodeInElement(equationNode, $createParagraphNode).selectEnd()
-                }
-
-                return true
-            },
-            COMMAND_PRIORITY_EDITOR,
-        )
-
-        return editor.registerNodeTransform(TextNode, $textNodeTransform)
     }, [editor])
 
+    useEffect(() => {
+        return mergeRegister(
+            editor.registerCommand<CommandPayload>(
+                INSERT_EQUATION_COMMAND,
+                payload => {
+                    const { equation, inline } = payload
+                    const equationNode = $createEquationNode(equation, inline)
+
+                    $insertNodes([equationNode])
+                    if ($isRootOrShadowRoot(equationNode.getParentOrThrow())) {
+                        $wrapNodeInElement(equationNode, $createParagraphNode).selectEnd()
+                    }
+
+                    return true
+                },
+                COMMAND_PRIORITY_EDITOR,
+            ),
+            editor.registerNodeTransform(TextNode, $textNodeTransform),
+        )
+    }, [editor])
     return null
 }

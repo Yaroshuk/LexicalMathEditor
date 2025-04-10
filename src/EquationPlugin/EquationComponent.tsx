@@ -166,7 +166,7 @@ export default function EquationComponent({
     //     //setMathField(field)
     // }, [equationValue, changeHandler])
 
-    console.log('VALUE', equationValue)
+    //console.log('VALUE', equationValue)
 
     return (
         <>
