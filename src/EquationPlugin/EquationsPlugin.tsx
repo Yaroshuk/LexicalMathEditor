@@ -56,23 +56,25 @@ function $findAndTransformInputFormula(node: TextNode, inputType: InputType): nu
     const { fullMatch, index, length, value, operator } = fourmulaInput
 
     let targetNode
+    let nextNode
 
     if (index === 0) {
-        ;[targetNode] = node.splitText(index + length)
+        ;[targetNode, nextNode] = node.splitText(index + length)
     } else {
-        ;[, targetNode] = node.splitText(index, index + length)
+        ;[, targetNode, nextNode] = node.splitText(index, index + length)
     }
 
     const formulaValue = inputToLatex(value, operator, fullMatch)
-
-    //console.log('formulaValue', formulaValue, '')
-    console.log('targetNode', targetNode === node, targetNode, node, inputType)
 
     const formulaNode = $createEquationNode(formulaValue, inputType === InputType.KEYBOARD)
 
     targetNode.replace(formulaNode)
 
-    return node === targetNode ? null : node
+    if (nextNode && nextNode.getTextContent().length > 0) {
+        return nextNode
+    }
+
+    return null
 }
 
 export default function EquationsPlugin(): JSX.Element | null {
