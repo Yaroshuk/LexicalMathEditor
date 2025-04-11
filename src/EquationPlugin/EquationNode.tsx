@@ -36,7 +36,6 @@ function $convertEquationElement(domNode: HTMLElement): null | DOMConversionOutp
     const inline = domNode.getAttribute('data-lexical-inline') === 'true'
     // Decode the equation from base64
     equation = atob(equation || '')
-    console.log(equation)
     if (equation) {
         const node = $createEquationNode(equation, inline)
         return { node }
@@ -47,18 +46,20 @@ function $convertEquationElement(domNode: HTMLElement): null | DOMConversionOutp
 
 export class EquationNode extends DecoratorNode<JSX.Element> {
     __equation: string
-    public __initialFocus: boolean
+    __initialFocus: boolean
 
     static getType(): string {
         return 'equation'
     }
 
     static clone(node: EquationNode): EquationNode {
-        console.log('cloning', node)
-        return new EquationNode(node.__equation, false, node.__key)
+        console.log('clone', node)
+        return new EquationNode(node.__equation, node.__initialFocus, node.__key)
     }
 
     constructor(equation: string, initialFocus?: boolean, key?: NodeKey) {
+        console.log('key', key, equation)
+
         super(key)
         this.__equation = equation
         this.__initialFocus = initialFocus ?? false
@@ -71,19 +72,11 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
         ).updateFromJSON(serializedNode)
     }
 
-    // eslint-disable-next-line @typescript-eslint/adjacent-overload-signatures
-    // static clone(node: EquationNode): EquationNode {
-    //     const newNode = new EquationNode(node.__equation, node.__initialFocus, node.__key)
-
-    //     return newNode
-    //    // return new EquationNode(node.__equation, this.__initialFocus, this.__key)
-    // }
-
     exportJSON(): SerializedEquationNode {
         return {
             ...super.exportJSON(),
             equation: this.getEquation(),
-            initialFocus: false,
+            initialFocus: this.__initialFocus,
         }
     }
 
@@ -97,18 +90,9 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
 
     exportDOM(): DOMExportOutput {
         const element = document.createElement('span')
-        // Encode the equation as base64 to avoid issues with special characters
         const equation = btoa(this.__equation)
         element.setAttribute('data-lexical-equation', equation)
-        // element.setAttribute('data-lexical-focus', `${this.__initialFocus}`)
-        // katex.render(this.__equation, element, {
-        //   displayMode: !this.__inline, // true === block display //
-        //   errorColor: '#cc0000',
-        //   output: 'html',
-        //   strict: 'warn',
-        //   throwOnError: false,
-        //   trust: false,
-        // });
+
         return { element }
     }
 
@@ -127,17 +111,16 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
     }
 
     updateDOM(prevNode: this): boolean {
-        //return false
-        // If the inline property changes, replace the element
-
-        if (this.__initialFocus) {
-            this.__initialFocus = false
-
-            return true
-        }
+        console.log(
+            'update',
+            this.__key,
+            this.__type,
+            this.__equation,
+            this.__initialFocus,
+            prevNode.__initialFocus,
+        )
 
         return false
-        //return this.__inline !== prevNode.__inline
     }
 
     getTextContent(): string {
@@ -149,19 +132,16 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
     }
 
     setEquation(equation: string): void {
-        console.log('rr', equation)
         const writable = this.getWritable()
         writable.__equation = equation
     }
 
     setInitialFocus(initialFocus: boolean): void {
-        //const writable = this.getWritable()
-        this.__initialFocus = initialFocus
+        const writable = this.getWritable()
+        writable.__initialFocus = initialFocus
     }
 
-
     decorate(): JSX.Element {
-        console.log('decorating', this.__initialFocus)
         const nodeFormula = (
             <EquationComponent
                 equation={this.__equation}
@@ -169,8 +149,6 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
                 nodeKey={this.__key}
             />
         )
-
-        this.__initialFocus = false
 
         return nodeFormula
     }

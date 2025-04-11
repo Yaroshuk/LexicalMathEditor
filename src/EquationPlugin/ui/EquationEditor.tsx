@@ -38,8 +38,6 @@ function EquationEditor(
 ): JSX.Element {
     const onChange = (event: ChangeEvent) => {
         const target = event.target as MathfieldElement
-
-        console.log('onChange', target?.value ?? '')
         setEquation((event.target as MathfieldElement).value)
     }
 

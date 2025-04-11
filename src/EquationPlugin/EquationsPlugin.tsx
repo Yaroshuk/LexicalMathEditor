@@ -21,6 +21,7 @@ import {
     createCommand,
     KEY_DOWN_COMMAND,
     LexicalCommand,
+    LexicalNode,
     PASTE_COMMAND,
     TextNode,
 } from 'lexical'
@@ -28,6 +29,7 @@ import { useEffect, useRef } from 'react'
 import { $createEquationNode, EquationNode } from './EquationNode'
 import { findFormulaInput } from './helpers/findFormulaInput'
 import { mergeRegister } from '@lexical/utils'
+import { inputToLatex } from './helpers/inputToLatex'
 
 type CommandPayload = {
     equation: string
@@ -51,9 +53,7 @@ function $findAndTransformInputFormula(node: TextNode, inputType: InputType): nu
         return null
     }
 
-    console.log('inputType', inputType, fourmulaInput)
-
-    const { fullMatch, index, length } = fourmulaInput
+    const { fullMatch, index, length, value, operator } = fourmulaInput
 
     let targetNode
 
@@ -63,7 +63,12 @@ function $findAndTransformInputFormula(node: TextNode, inputType: InputType): nu
         ;[, targetNode] = node.splitText(index, index + length)
     }
 
-    const formulaNode = $createEquationNode(`$${fullMatch}$`, inputType === InputType.KEYBOARD)
+    const formulaValue = inputToLatex(value, operator, fullMatch)
+
+    //console.log('formulaValue', formulaValue, '')
+    console.log('targetNode', targetNode === node, targetNode, node, inputType)
+
+    const formulaNode = $createEquationNode(formulaValue, inputType === InputType.KEYBOARD)
 
     targetNode.replace(formulaNode)
 
@@ -83,21 +88,21 @@ export default function EquationsPlugin(): JSX.Element | null {
 
     useEffect(() => {
         return mergeRegister(
-            editor.registerCommand<CommandPayload>(
-                INSERT_EQUATION_COMMAND,
-                payload => {
-                    const { equation, inline } = payload
-                    const equationNode = $createEquationNode(equation, inline)
+            // editor.registerCommand<CommandPayload>(
+            //     INSERT_EQUATION_COMMAND,
+            //     payload => {
+            //         const { equation, inline } = payload
+            //         const equationNode = $createEquationNode(equation, inline)
 
-                    $insertNodes([equationNode])
-                    if ($isRootOrShadowRoot(equationNode.getParentOrThrow())) {
-                        $wrapNodeInElement(equationNode, $createParagraphNode).selectEnd()
-                    }
+            //         $insertNodes([equationNode])
+            //         if ($isRootOrShadowRoot(equationNode.getParentOrThrow())) {
+            //             $wrapNodeInElement(equationNode, $createParagraphNode).selectEnd()
+            //         }
 
-                    return true
-                },
-                COMMAND_PRIORITY_EDITOR,
-            ),
+            //         return true
+            //     },
+            //     COMMAND_PRIORITY_EDITOR,
+            //),
             editor.registerCommand(
                 PASTE_COMMAND,
                 () => {
@@ -116,6 +121,8 @@ export default function EquationsPlugin(): JSX.Element | null {
             ),
             editor.registerNodeTransform(TextNode, (node: TextNode) => {
                 let targetNode: TextNode | null = node
+
+                console.log('node', node, node.getType())
 
                 while (targetNode !== null) {
                     if (!targetNode.isSimpleText()) {

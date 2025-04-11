@@ -67,7 +67,6 @@ export const EQUATION: TextMatchTransformer = {
     //importRegExp: /\$([^$]+?)\$/,
     regExp: /\$([^$]+?)\$/,
     replace: (textNode, match) => {
-        console.log('match', match, textNode)
 
         const [, equation] = match
         const equationNode = $createEquationNode(equation, true)

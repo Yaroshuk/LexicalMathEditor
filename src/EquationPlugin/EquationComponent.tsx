@@ -26,12 +26,19 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { useLexicalNodeSelection } from '@lexical/react/useLexicalNodeSelection'
 import { mergeRegister } from '@lexical/utils'
 import {
+    $createRangeSelection,
     $getNodeByKey,
     $getSelection,
     $isNodeSelection,
+    $setSelection,
     BaseSelection,
     CLICK_COMMAND,
+    COMMAND_PRIORITY_EDITOR,
+    COMMAND_PRIORITY_HIGH,
     COMMAND_PRIORITY_LOW,
+    CommandListener,
+    KEY_DOWN_COMMAND,
+    KEY_ENTER_COMMAND,
     NodeKey,
 } from 'lexical'
 import { useEffect, useRef, useState } from 'react'
@@ -99,36 +106,6 @@ export default function EquationComponent({
     }, [equation, equationValue])
 
     useEffect(() => {
-        // if (false) {
-        //     return mergeRegister(
-        //         editor.registerCommand(
-        //             SELECTION_CHANGE_COMMAND,
-        //             payload => {
-        //                 const activeElement = document.activeElement
-        //                 const inputElem = inputRef.current
-        //                 if (inputElem !== activeElement) {
-        //                     onHide()
-        //                 }
-        //                 return false
-        //             },
-        //             COMMAND_PRIORITY_HIGH,
-        //         ),
-        //         editor.registerCommand(
-        //             KEY_ESCAPE_COMMAND,
-        //             payload => {
-        //                 console.log(payload)
-        //                 const activeElement = document.activeElement
-        //                 const inputElem = inputRef.current
-        //                 if (inputElem === activeElement) {
-        //                     onHide(true)
-        //                     return true
-        //                 }
-        //                 return false
-        //             },
-        //             COMMAND_PRIORITY_HIGH,
-        //         ),
-        //     )
-        // } else {
         return mergeRegister(
             editor.registerUpdateListener(({ editorState }) => {
                 setSelection(editorState.read(() => $getSelection()))
@@ -137,7 +114,6 @@ export default function EquationComponent({
                 CLICK_COMMAND,
                 payload => {
                     const event = payload
-                    console.log(event.target)
 
                     if (event.target === ref.current) {
                         // editor.blur()
@@ -155,7 +131,7 @@ export default function EquationComponent({
                 COMMAND_PRIORITY_LOW,
             ),
         )
-    }, [editor, nodeKey, showEquationEditor])
+    }, [clearSelection, editor, isSelected, nodeKey, setSelected, showEquationEditor])
 
     const isFocused = $isNodeSelection(selection) && isSelected
 
@@ -164,7 +140,6 @@ export default function EquationComponent({
             const node = $getNodeByKey(nodeKey)
 
             if ($isEquationNode(node)) {
-                console.log('node', node)
                 node.setEquation(value)
             }
         })
@@ -183,24 +158,80 @@ export default function EquationComponent({
 
     //console.log('VALUE', equationValue)
 
+    const setEditorFocusAfterEquation = () => {
+        //let selection = $getSelection()
+
+        editor.update(() => {
+            const node = $getNodeByKey(nodeKey)
+            const parentNode = node?.getParent()
+
+            if (!parentNode) {
+                return
+            }
+
+            if (node) {
+                const nodeIndex = parentNode.getChildren().indexOf(node)
+
+                const selection = $createRangeSelection()
+
+                if (nodeIndex === parentNode.getChildrenSize() - 1) {
+                    selection.anchor.set(parentNode.__key, parentNode.getChildrenSize(), 'element')
+                    selection.focus.set(parentNode.__key, parentNode.getChildrenSize(), 'element')
+                } else {
+                    // Иначе ставим курсор в начало следующей ноды
+                    const nextNode = parentNode.getChildren()[nodeIndex + 1]
+
+                    const offsetType = nextNode.getType() === 'text' ? 'text' : 'element'
+
+                    selection.anchor.set(nextNode.__key, 0, offsetType)
+                    selection.focus.set(nextNode.__key, 0, offsetType)
+                }
+
+                $setSelection(selection)
+            }
+        })
+    }
+
     return (
         <>
             <div className={clsx(styles.MathField, isFocused && styles.Focused)}>
-                <img
+                {/* <img
                     src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                     width="0"
                     height="0"
                     alt=""
-                />
+                /> */}
                 <math-field
                     onInput={evt => changeHandler((evt.target as MathfieldElement).value)}
                     ref={elem => {
+                        if (elem === null) {
+                            return
+                        }
+
+
                         const mathinput = elem as MathfieldElement
 
-                        if (initialFocus && mathinput) {
-                            console.log('initial', initialFocus, mathinput)
+                        if (initialFocus) {
                             mathinput?.focus()
-                            mathinput.executeCommand('moveToMathfieldEnd')
+
+
+                            if (equationValue.includes('placeholder{}')) {
+                                mathinput?.executeCommand('moveToNextPlaceholder')
+                            } else {
+                                mathinput?.executeCommand('moveToMathfieldEnd')
+                            }
+                        }
+
+                        mathinput.onchange = (event: Event) => {
+                            const target = event.target as MathfieldElement
+                            console.log('onchange', target, target.value)
+                            // target.blur()
+                            // setTimeout(() => {
+                            //     setEditorFocusAfterEquation()
+                            // }, 0)
+
+                            // event.stopPropagation()
+                            // return false
                         }
 
                         ref.current = elem
@@ -209,12 +240,12 @@ export default function EquationComponent({
                 >
                     {equationValue}
                 </math-field>
-                <img
+                {/* <img
                     src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                     width="0"
                     height="0"
                     alt=""
-                />
+                /> */}
             </div>
         </>
     )
