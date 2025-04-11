@@ -19,6 +19,7 @@ import type { JSX } from 'react'
 
 import { DecoratorNode, DOMExportOutput } from 'lexical'
 import * as React from 'react'
+import { node } from 'prop-types'
 
 const EquationComponent = React.lazy(() => import('./EquationComponent'))
 
@@ -46,14 +47,15 @@ function $convertEquationElement(domNode: HTMLElement): null | DOMConversionOutp
 
 export class EquationNode extends DecoratorNode<JSX.Element> {
     __equation: string
-    __initialFocus: boolean
+    public __initialFocus: boolean
 
     static getType(): string {
         return 'equation'
     }
 
     static clone(node: EquationNode): EquationNode {
-        return new EquationNode(node.__equation, node.__initialFocus, node.__key)
+        console.log('cloning', node)
+        return new EquationNode(node.__equation, false, node.__key)
     }
 
     constructor(equation: string, initialFocus?: boolean, key?: NodeKey) {
@@ -63,21 +65,30 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
     }
 
     static importJSON(serializedNode: SerializedEquationNode): EquationNode {
-        return $createEquationNode(serializedNode.equation, serializedNode.initialFocus).updateFromJSON(
-            serializedNode,
-        )
+        return $createEquationNode(
+            serializedNode.equation,
+            serializedNode.initialFocus,
+        ).updateFromJSON(serializedNode)
     }
+
+    // eslint-disable-next-line @typescript-eslint/adjacent-overload-signatures
+    // static clone(node: EquationNode): EquationNode {
+    //     const newNode = new EquationNode(node.__equation, node.__initialFocus, node.__key)
+
+    //     return newNode
+    //    // return new EquationNode(node.__equation, this.__initialFocus, this.__key)
+    // }
 
     exportJSON(): SerializedEquationNode {
         return {
             ...super.exportJSON(),
             equation: this.getEquation(),
-            initialFocus: this.__initialFocus,
+            initialFocus: false,
         }
     }
 
     createDOM(_config: EditorConfig): HTMLElement {
-        const element = document.createElement(this.__inline ? 'span' : 'div')
+        const element = document.createElement('span')
         // EquationNodes should implement `user-action:none` in their CSS to avoid issues with deletion on Android.
         element.style.display = 'inline-block'
         element.className = 'editor-equation'
@@ -85,11 +96,11 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
     }
 
     exportDOM(): DOMExportOutput {
-        const element = document.createElement(this.__inline ? 'span' : 'div')
+        const element = document.createElement('span')
         // Encode the equation as base64 to avoid issues with special characters
         const equation = btoa(this.__equation)
         element.setAttribute('data-lexical-equation', equation)
-        element.setAttribute('data-lexical-inline', `${this.__inline}`)
+        // element.setAttribute('data-lexical-focus', `${this.__initialFocus}`)
         // katex.render(this.__equation, element, {
         //   displayMode: !this.__inline, // true === block display //
         //   errorColor: '#cc0000',
@@ -103,15 +114,6 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
 
     static importDOM(): DOMConversionMap | null {
         return {
-            div: (domNode: HTMLElement) => {
-                if (!domNode.hasAttribute('data-lexical-equation')) {
-                    return null
-                }
-                return {
-                    conversion: $convertEquationElement,
-                    priority: 2,
-                }
-            },
             span: (domNode: HTMLElement) => {
                 if (!domNode.hasAttribute('data-lexical-equation')) {
                     return null
@@ -125,9 +127,17 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
     }
 
     updateDOM(prevNode: this): boolean {
-        return false
+        //return false
         // If the inline property changes, replace the element
-        return this.__inline !== prevNode.__inline
+
+        if (this.__initialFocus) {
+            this.__initialFocus = false
+
+            return true
+        }
+
+        return false
+        //return this.__inline !== prevNode.__inline
     }
 
     getTextContent(): string {
@@ -144,14 +154,25 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
         writable.__equation = equation
     }
 
+    setInitialFocus(initialFocus: boolean): void {
+        //const writable = this.getWritable()
+        this.__initialFocus = initialFocus
+    }
+
+
     decorate(): JSX.Element {
-        return (
+        console.log('decorating', this.__initialFocus)
+        const nodeFormula = (
             <EquationComponent
                 equation={this.__equation}
-                inline={this.__inline}
+                initialFocus={this.__initialFocus}
                 nodeKey={this.__key}
             />
         )
+
+        this.__initialFocus = false
+
+        return nodeFormula
     }
 }
 

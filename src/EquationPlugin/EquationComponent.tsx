@@ -37,20 +37,21 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { ErrorBoundary } from 'react-error-boundary'
 
-import { $isEquationNode } from './EquationNode'
+import { $isEquationNode, EquationNode } from './EquationNode'
 import styles from './Equations.module.scss'
 import { MathfieldElement } from 'mathlive'
 import clsx from 'clsx'
 
 type EquationComponentProps = {
     equation: string
-    inline: boolean
+    initialFocus: boolean
     nodeKey: NodeKey
 }
 
 export default function EquationComponent({
     equation,
     nodeKey,
+    initialFocus,
 }: EquationComponentProps): JSX.Element {
     const [editor] = useLexicalComposerContext()
     //const isEditable = useLexicalEditable()
@@ -58,7 +59,7 @@ export default function EquationComponent({
     const [showEquationEditor] = useState<boolean>(false)
     const [selection, setSelection] = useState<BaseSelection | null>(null)
     const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey)
-    const ref = useRef(null)
+    const ref = useRef<MathfieldElement | null>(null)
     const [MathField, setMathField] = useState<MathfieldElement | null>(null)
 
     // const onHide = useCallback(
@@ -76,6 +77,20 @@ export default function EquationComponent({
     //     },
     //     [editor, equationValue, nodeKey],
     // )
+
+    useEffect(() => {
+        if (initialFocus) {
+            editor.update(() => {
+                const node = $getNodeByKey(nodeKey)
+
+                if (node) {
+                    const writable = node.getWritable() as EquationNode
+
+                    writable.__initialFocus = false
+                }
+            })
+        }
+    }, [initialFocus, editor, nodeKey])
 
     useEffect(() => {
         if (equationValue !== equation) {
@@ -179,7 +194,17 @@ export default function EquationComponent({
                 />
                 <math-field
                     onInput={evt => changeHandler((evt.target as MathfieldElement).value)}
-                    ref={ref}
+                    ref={elem => {
+                        const mathinput = elem as MathfieldElement
+
+                        if (initialFocus && mathinput) {
+                            console.log('initial', initialFocus, mathinput)
+                            mathinput?.focus()
+                            mathinput.executeCommand('moveToMathfieldEnd')
+                        }
+
+                        ref.current = elem
+                    }}
                     tabIndex={-1}
                 >
                     {equationValue}

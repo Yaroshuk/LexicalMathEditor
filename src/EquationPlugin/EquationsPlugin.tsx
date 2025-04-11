@@ -63,7 +63,7 @@ function $findAndTransformInputFormula(node: TextNode, inputType: InputType): nu
         ;[, targetNode] = node.splitText(index, index + length)
     }
 
-    const formulaNode = $createEquationNode(`$${fullMatch}$`, true)
+    const formulaNode = $createEquationNode(`$${fullMatch}$`, inputType === InputType.KEYBOARD)
 
     targetNode.replace(formulaNode)
 
