@@ -21,6 +21,7 @@ import {
     createCommand,
     KEY_DOWN_COMMAND,
     LexicalCommand,
+    LexicalEditor,
     LexicalNode,
     PASTE_COMMAND,
     TextNode,
@@ -33,7 +34,7 @@ import { inputToLatex } from './helpers/inputToLatex'
 
 type CommandPayload = {
     equation: string
-    inline: boolean
+    initialFocus: boolean
 }
 
 enum InputType {
@@ -44,7 +45,11 @@ enum InputType {
 export const INSERT_EQUATION_COMMAND: LexicalCommand<CommandPayload> =
     createCommand('INSERT_EQUATION_COMMAND')
 
-function $findAndTransformInputFormula(node: TextNode, inputType: InputType): null | TextNode {
+function $findAndTransformInputFormula(
+    node: TextNode,
+    inputType: InputType,
+    editor: LexicalEditor,
+): null | TextNode {
     const text = node.getTextContent()
 
     const fourmulaInput = findFormulaInput(text)
@@ -66,9 +71,12 @@ function $findAndTransformInputFormula(node: TextNode, inputType: InputType): nu
 
     const formulaValue = inputToLatex(value, operator, fullMatch)
 
-    const formulaNode = $createEquationNode(formulaValue, inputType === InputType.KEYBOARD)
+    targetNode.remove()
 
-    targetNode.replace(formulaNode)
+    editor.dispatchCommand(INSERT_EQUATION_COMMAND, {
+        equation: formulaValue,
+        initialFocus: inputType === InputType.KEYBOARD,
+    })
 
     if (nextNode && nextNode.getTextContent().length > 0) {
         return nextNode
@@ -90,21 +98,21 @@ export default function EquationsPlugin(): JSX.Element | null {
 
     useEffect(() => {
         return mergeRegister(
-            // editor.registerCommand<CommandPayload>(
-            //     INSERT_EQUATION_COMMAND,
-            //     payload => {
-            //         const { equation, inline } = payload
-            //         const equationNode = $createEquationNode(equation, inline)
+            editor.registerCommand<CommandPayload>(
+                INSERT_EQUATION_COMMAND,
+                payload => {
+                    const { equation, initialFocus } = payload
+                    const equationNode = $createEquationNode(equation, initialFocus)
 
-            //         $insertNodes([equationNode])
-            //         if ($isRootOrShadowRoot(equationNode.getParentOrThrow())) {
-            //             $wrapNodeInElement(equationNode, $createParagraphNode).selectEnd()
-            //         }
+                    $insertNodes([equationNode])
+                    if ($isRootOrShadowRoot(equationNode.getParentOrThrow())) {
+                        $wrapNodeInElement(equationNode, $createParagraphNode).selectEnd()
+                    }
 
-            //         return true
-            //     },
-            //     COMMAND_PRIORITY_EDITOR,
-            //),
+                    return true
+                },
+                COMMAND_PRIORITY_EDITOR,
+            ),
             editor.registerCommand(
                 PASTE_COMMAND,
                 () => {
@@ -131,7 +139,11 @@ export default function EquationsPlugin(): JSX.Element | null {
                         return
                     }
 
-                    targetNode = $findAndTransformInputFormula(targetNode, inputTypeRef.current)
+                    targetNode = $findAndTransformInputFormula(
+                        targetNode,
+                        inputTypeRef.current,
+                        editor,
+                    )
                 }
             }),
         )

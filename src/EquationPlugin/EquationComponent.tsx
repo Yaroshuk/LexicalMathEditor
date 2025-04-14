@@ -22,9 +22,8 @@ import '//unpkg.com/mathlive'
 import type { JSX } from 'react'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
-//import { useLexicalEditable } from '@lexical/react/useLexicalEditable'
 import { useLexicalNodeSelection } from '@lexical/react/useLexicalNodeSelection'
-import { $getNearestNodeOfType, mergeRegister } from '@lexical/utils'
+import { mergeRegister } from '@lexical/utils'
 import {
     $createRangeSelection,
     $getNodeByKey,
@@ -39,13 +38,11 @@ import {
     COMMAND_PRIORITY_LOW,
     CommandListener,
     createCommand,
-    ElementNode,
     KEY_DOWN_COMMAND,
     LexicalCommand,
     LexicalEditor,
     LexicalNode,
     NodeKey,
-    TextNode,
 } from 'lexical'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -74,32 +71,10 @@ export default function EquationComponent({
     initialFocus,
 }: EquationComponentProps): JSX.Element {
     const [editor] = useLexicalComposerContext()
-    //const isEditable = useLexicalEditable()
-    //const [equationValue, setEquationValue] = useState(equation)
     const [showEquationEditor] = useState<boolean>(false)
     const [selection, setSelection] = useState<BaseSelection | null>(null)
     const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey)
     const ref = useRef<MathfieldElement | null>(null)
-    const [MathField, setMathField] = useState<MathfieldElement | null>(null)
-    const [prevoiusMathSelection, setPrevoiusMathSelection] = useState<[number, number] | null>(
-        null,
-    )
-
-    // const onHide = useCallback(
-    //     (restoreSelection?: boolean) => {
-    //         setShowEquationEditor(false)
-    //         editor.update(() => {
-    //             const node = $getNodeByKey(nodeKey)
-    //             if ($isEquationNode(node)) {
-    //                 node.setEquation(equationValue)
-    //                 if (restoreSelection) {
-    //                     node.selectNext(0, 0)
-    //                 }
-    //             }
-    //         })
-    //     },
-    //     [editor, equationValue, nodeKey],
-    // )
 
     const registerCustomInputCommands = useCallback(
         (editor: LexicalEditor) => {
@@ -163,13 +138,9 @@ export default function EquationComponent({
     const onEditorKeyDownHandler: CommandListener<KeyboardEvent> = useCallback((event, editor) => {
         const target = event.target as HTMLElement
 
-        //console.log('keydown', target, target.dataset)
-
         if (!target.dataset?.lexicalEditor) return false
 
         const selection = $getSelection()
-
-        //console.log('selection', selection, event.key, event.shiftKey)
 
         if (!$isRangeSelection(selection) || selection.isCollapsed() === false) {
             return false
@@ -179,8 +150,6 @@ export default function EquationComponent({
 
         if (event.key === 'ArrowLeft') {
             let node: LexicalNode | null = null
-
-            //console.log('left', selection, anchorNode)
 
             if ($isParagraphNode(anchorNode)) {
                 if (
@@ -194,10 +163,6 @@ export default function EquationComponent({
             }
 
             if (!node) return false
-
-            // if (node.getIndexWithinParent() === 0) {
-            //     return false
-            // }
 
             if (node && node.__type === 'equation') {
                 editor.dispatchCommand(FOCUS_CUSTOM_INPUT_COMMAND, {
@@ -225,17 +190,6 @@ export default function EquationComponent({
 
             if (!node) return false
 
-            // if (node.getIndexWithinParent() + 1 === node.getParent()?.getChildrenSize()) {
-            //     return false
-            // }
-
-            console.log(
-                'right',
-                $getNearestNodeOfType(node, ElementNode),
-                node.getIndexWithinParent(),
-                node.getParent()?.getChildrenSize(),
-            )
-
             if (node && node.__type === 'equation') {
                 editor.dispatchCommand(FOCUS_CUSTOM_INPUT_COMMAND, {
                     nodeKey: node.__key,
@@ -261,34 +215,13 @@ export default function EquationComponent({
 
             const nodeIndex = parentNode.getChildren().indexOf(node)
             const selection = $createRangeSelection()
+
             if (position === 'after') {
-                if (nodeIndex === parentNode.getChildrenSize() - 1) {
-                    selection.anchor.set(parentNode.__key, parentNode.getChildrenSize(), 'element')
-                    selection.focus.set(parentNode.__key, parentNode.getChildrenSize(), 'element')
-                } else {
-                    const nextNode = parentNode.getChildren()[nodeIndex + 1]
-                    const offsetType = nextNode.getType() === 'text' ? 'text' : 'element'
-                    selection.anchor.set(nextNode.__key, 0, offsetType)
-                    selection.focus.set(nextNode.__key, 0, offsetType)
-                }
+                selection.anchor.set(parentNode.__key, nodeIndex + 1, 'element')
+                selection.focus.set(parentNode.__key, nodeIndex + 1, 'element')
             } else {
-                if (nodeIndex === 0) {
-                    selection.anchor.set(parentNode.__key, 0, 'element')
-                    selection.focus.set(parentNode.__key, 0, 'element')
-                } else {
-                    const prevNode = parentNode.getChildren()[nodeIndex - 1]
-                    const offsetType = prevNode.getType() === 'text' ? 'text' : 'element'
-                    selection.anchor.set(
-                        prevNode.__key,
-                        prevNode.getTextContent().length,
-                        offsetType,
-                    )
-                    selection.focus.set(
-                        prevNode.__key,
-                        prevNode.getTextContent().length,
-                        offsetType,
-                    )
-                }
+                selection.anchor.set(parentNode.__key, nodeIndex, 'element')
+                selection.focus.set(parentNode.__key, nodeIndex, 'element')
             }
             $setSelection(selection)
             editor.focus()
@@ -465,9 +398,7 @@ export default function EquationComponent({
                         ref.current = elem
                     }}
                     tabIndex={-1}
-                >
-                    {/* {equationValue} */}
-                </math-field>
+                />
             </span>
         </>
     )

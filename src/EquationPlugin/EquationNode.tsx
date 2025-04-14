@@ -19,7 +19,6 @@ import type { JSX } from 'react'
 
 import { DecoratorNode, DOMExportOutput } from 'lexical'
 import * as React from 'react'
-import { node } from 'prop-types'
 
 const EquationComponent = React.lazy(() => import('./EquationComponent'))
 
