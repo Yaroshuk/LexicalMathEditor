@@ -152,11 +152,10 @@ export default function EquationComponent({
             let node: LexicalNode | null = null
 
             if ($isParagraphNode(anchorNode)) {
-                if (
-                    selection.getNodes().length === 1 &&
-                    selection.getNodes()[0].__type === 'equation'
-                ) {
-                    node = selection.getNodes()[0]
+                if (selection.anchor.offset === 0) {
+                    return false
+                } else {
+                    node = anchorNode.getChildAtIndex(selection.anchor.offset - 1)
                 }
             } else if (selection.anchor.offset === 0) {
                 node = anchorNode.getPreviousSibling()
@@ -178,12 +177,15 @@ export default function EquationComponent({
             let node: LexicalNode | null = null
 
             if ($isParagraphNode(anchorNode)) {
-                if (
-                    selection.getNodes().length === 1 &&
-                    selection.getNodes()[0].__type === 'equation'
-                ) {
-                    node = selection.getNodes()[0]
+                console.log('111', selection.anchor.offset, anchorNode.getChildrenSize())
+
+                if (selection.anchor.offset === anchorNode.getChildrenSize()) {
+                    return false
+                } else {
+                    node = anchorNode.getChildAtIndex(selection.anchor.offset)
+                    console.log('node', node)
                 }
+
             } else if (selection.anchor.offset === anchorNode.getTextContent().length) {
                 node = anchorNode.getNextSibling()
             }
@@ -309,6 +311,7 @@ export default function EquationComponent({
                 payload => {
                     const target = payload.target as HTMLElement
 
+                    console.log('KEY_DOWN_COMMAND')
                     if (target.tagName === 'MATH-FIELD') {
                         return onMathFieldKeyDownHandler(payload, editor)
                     }
