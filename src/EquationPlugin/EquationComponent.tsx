@@ -62,7 +62,7 @@ export default function EquationComponent({
 }: EquationComponentProps): JSX.Element {
     const [editor] = useLexicalComposerContext()
     //const isEditable = useLexicalEditable()
-    const [equationValue, setEquationValue] = useState(equation)
+    //const [equationValue, setEquationValue] = useState(equation)
     const [showEquationEditor] = useState<boolean>(false)
     const [selection, setSelection] = useState<BaseSelection | null>(null)
     const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey)
@@ -100,10 +100,16 @@ export default function EquationComponent({
     }, [initialFocus, editor, nodeKey])
 
     useEffect(() => {
-        if (equationValue !== equation) {
-            setEquationValue(equation)
+        if (ref.current === null) {
+            return
         }
-    }, [equation, equationValue])
+
+        const mathinput = ref.current as MathfieldElement
+        mathinput.value = equation
+        // if (equationValue !== equation) {
+        //     setEquationValue(equation)
+        // }
+    }, [equation])
 
     useEffect(() => {
         return mergeRegister(
@@ -138,6 +144,8 @@ export default function EquationComponent({
     const changeHandler = (value: string) => {
         editor.update(() => {
             const node = $getNodeByKey(nodeKey)
+
+            console.log('changeHandler', node, value)
 
             if ($isEquationNode(node)) {
                 node.setEquation(value)
@@ -194,13 +202,7 @@ export default function EquationComponent({
 
     return (
         <>
-            <div className={clsx(styles.MathField, isFocused && styles.Focused)}>
-                {/* <img
-                    src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                    width="0"
-                    height="0"
-                    alt=""
-                /> */}
+            <span className={clsx(styles.MathField, isFocused && styles.Focused)}>
                 <math-field
                     onInput={evt => changeHandler((evt.target as MathfieldElement).value)}
                     ref={elem => {
@@ -208,14 +210,13 @@ export default function EquationComponent({
                             return
                         }
 
-
                         const mathinput = elem as MathfieldElement
+                        mathinput.value = equation
 
                         if (initialFocus) {
                             mathinput?.focus()
 
-
-                            if (equationValue.includes('placeholder{}')) {
+                            if (equation.includes('placeholder{}')) {
                                 mathinput?.executeCommand('moveToNextPlaceholder')
                             } else {
                                 mathinput?.executeCommand('moveToMathfieldEnd')
@@ -225,28 +226,22 @@ export default function EquationComponent({
                         mathinput.onchange = (event: Event) => {
                             const target = event.target as MathfieldElement
                             console.log('onchange', target, target.value)
-                            // target.blur()
-                            // setTimeout(() => {
-                            //     setEditorFocusAfterEquation()
-                            // }, 0)
+                            target.blur()
+                            setTimeout(() => {
+                                setEditorFocusAfterEquation()
+                            }, 0)
 
-                            // event.stopPropagation()
-                            // return false
+                            event.stopPropagation()
+                            return false
                         }
 
                         ref.current = elem
                     }}
                     tabIndex={-1}
                 >
-                    {equationValue}
+                    {/* {equationValue} */}
                 </math-field>
-                {/* <img
-                    src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                    width="0"
-                    height="0"
-                    alt=""
-                /> */}
-            </div>
+            </span>
         </>
     )
 }

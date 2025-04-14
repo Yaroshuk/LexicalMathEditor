@@ -53,12 +53,12 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
     }
 
     static clone(node: EquationNode): EquationNode {
-        console.log('clone', node)
+        // console.log('clone', node)
         return new EquationNode(node.__equation, node.__initialFocus, node.__key)
     }
 
     constructor(equation: string, initialFocus?: boolean, key?: NodeKey) {
-        console.log('key', key, equation)
+        // console.log('key', key, equation)
 
         super(key)
         this.__equation = equation
@@ -111,14 +111,14 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
     }
 
     updateDOM(prevNode: this): boolean {
-        console.log(
-            'update',
-            this.__key,
-            this.__type,
-            this.__equation,
-            this.__initialFocus,
-            prevNode.__initialFocus,
-        )
+        // console.log(
+        //     'update',
+        //     this.__key,
+        //     this.__type,
+        //     this.__equation,
+        //     this.__initialFocus,
+        //     prevNode.__initialFocus,
+        // )
 
         return false
     }

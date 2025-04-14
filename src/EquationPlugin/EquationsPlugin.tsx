@@ -124,7 +124,7 @@ export default function EquationsPlugin(): JSX.Element | null {
             editor.registerNodeTransform(TextNode, (node: TextNode) => {
                 let targetNode: TextNode | null = node
 
-                console.log('node', node, node.getType())
+                // console.log('node', node, node.getType())
 
                 while (targetNode !== null) {
                     if (!targetNode.isSimpleText()) {
