@@ -23,16 +23,16 @@ export default defineConfig({
         tsconfigPaths(),
     ],
     base: '/LexicalMathEditor/',
-    build: {
-        lib: {
-            entry: resolve(__dirname, 'src/index.tsx'),
-            name: 'lexical-math',
-            formats: ['es'],
-            fileName: format => `lexical-math.${format}.js`,
-        },
-        rollupOptions: {
-            external: [...Object.keys(packageJson.peerDependencies), 'react/jsx-runtime'],
-        },
-        sourcemap: true,
-    },
+    // build: {
+    //     lib: {
+    //         entry: resolve(__dirname, 'src/index.tsx'),
+    //         name: 'lexical-math',
+    //         formats: ['es'],
+    //         fileName: format => `lexical-math.${format}.js`,
+    //     },
+    //     rollupOptions: {
+    //         external: [...Object.keys(packageJson.peerDependencies), 'react/jsx-runtime'],
+    //     },
+    //     sourcemap: true,
+    // },
 })
