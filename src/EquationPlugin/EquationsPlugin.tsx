@@ -22,7 +22,6 @@ import {
     KEY_DOWN_COMMAND,
     LexicalCommand,
     LexicalEditor,
-    LexicalNode,
     PASTE_COMMAND,
     TextNode,
 } from 'lexical'

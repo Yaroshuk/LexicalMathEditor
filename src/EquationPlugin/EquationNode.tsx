@@ -109,7 +109,7 @@ export class EquationNode extends DecoratorNode<JSX.Element> {
         }
     }
 
-    updateDOM(prevNode: this): boolean {
+    updateDOM(): boolean {
         // console.log(
         //     'update',
         //     this.__key,

@@ -22,6 +22,7 @@ export default defineConfig({
         }),
         tsconfigPaths(),
     ],
+    base: '/LexicalMathEditor/',
     build: {
         lib: {
             entry: resolve(__dirname, 'src/index.tsx'),

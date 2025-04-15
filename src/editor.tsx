@@ -10,7 +10,6 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { EditorState } from 'lexical';
-import EmojisPlugin from './EmojiPlugin/EmojuPlugin';
 import { EmojiNode } from './EmojiPlugin/EmojiNode';
 import EquationsPlugin from './EquationPlugin/EquationsPlugin';
 import { EquationNode } from './EquationPlugin/EquationNode';
